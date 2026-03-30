@@ -42,4 +42,5 @@ substitutions:
   battery:        "\U000F089E"
   filament:       "\U000F07DE"
   lan:            "\U000F0317"
+  wifi:           "\U000F636A"  # mdi-wifi
 

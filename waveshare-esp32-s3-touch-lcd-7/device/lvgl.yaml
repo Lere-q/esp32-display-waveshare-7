@@ -11,6 +11,71 @@ lvgl:
           y: 4
           text_align: center
           text_color: 0xFFFFFF
+      # WiFi Indicator
+      - label:
+          text: $wifi  # WiFi icon from mdi
+          id: wifi_indicator
+          styles: roboto15_style
+          align: top_left
+          x: 8
+          y: 4
+          text_color: 0xFFFFFF
+          on_press:
+            - lambda: |-
+                id(wifi_popup).hidden = !id(wifi_popup).hidden;
+      # WiFi Popup
+      - obj:
+          id: wifi_popup
+          hidden: true
+          align: center
+          width: 400px
+          height: 200px
+          bg_color: 0x313131
+          bg_opa: cover
+          radius: 12px
+          widgets:
+            - label:
+                text: "WiFi Information"
+                align: top_mid
+                y: 10
+                text_color: 0xFFFFFF
+                text_font: roboto17_font
+            - label:
+                text: "SSID: --"
+                id: popup_ssid
+                align: top_mid
+                y: 40
+                text_color: 0xFFFFFF
+                text_font: roboto17_font
+            - label:
+                text: "IP: --"
+                id: popup_ip
+                align: top_mid
+                y: 70
+                text_color: 0xFFFFFF
+                text_font: roboto17_font
+            - label:
+                text: "Press to toggle WiFi"
+                align: bottom_mid
+                y: -10
+                text_color: 0xFF8C00
+                text_font: roboto15_font
+            - button:
+                align: bottom_mid
+                width: 100px
+                height: 40px
+                y: 30
+                text: "Toggle"
+                id: wifi_toggle_button
+                styles: control
+                on_press:
+                  - homeassistant.service:
+                      service: wifi.control
+                      data:
+                        ssid: !lambda |-
+                          return id(wifi_ssid).state.c_str();
+                        enable: !lambda |-
+                          return true;
   pages:
     - id: main_page
       layout: 
@@ -23,25 +88,3 @@ lvgl:
       pad_bottom: 5
       pad_left: 5
       pad_right: 5
-      
-      widgets:
-        # Test Button - Large Centered Button
-        - button: 
-            width: 300px
-            height: 309px
-            align: center
-            id: test_button
-            styles: control
-            checkable: true
-            widgets:
-              - label:
-                  text_font: $text_font
-                  align: center
-                  id: test_button_label
-                  text: "Test"
-            on_press:
-              - homeassistant.service:
-                  service: notify.notify
-                  data:
-                    message: "Button gedrückt!"
-                    title: "ESP32 Display"

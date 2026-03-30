@@ -40,3 +40,18 @@ text_sensor:
     ip_address:
       name: IP Address
       icon: mdi:ip-network
+      id: wifi_ip_address
+    ssid:
+      name: SSID
+      icon: mdi:wifi
+      id: wifi_ssid
+
+# Scripts for WiFi popup updates
+script:
+  - id: update_wifi_popup
+    then:
+      - lambda: |-
+          if (!id(wifi_popup).hidden) {
+            id(popup_ssid).set_text(strcmp(id(wifi_ssid).state.c_str(), "--") != 0 ? id(wifi_ssid).state.c_str() : "Not Connected");
+            id(popup_ip).set_text(strcmp(id(wifi_ip_address).state.c_str(), "--") != 0 ? id(wifi_ip_address).state.c_str() : "No IP");
+          };
