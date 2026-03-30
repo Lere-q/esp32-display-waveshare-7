@@ -70,12 +70,10 @@ lvgl:
                 styles: control
                 on_press:
                   - homeassistant.service:
-                      service: wifi.control
+                      service: persistent_notification.create
                       data:
-                        ssid: !lambda |-
-                          return id(wifi_ssid).state.c_str();
-                        enable: !lambda |-
-                          return true;
+                        title: "WiFi Toggle"
+                        message: "Button pressed"
   pages:
     - id: main_page
       layout: 
