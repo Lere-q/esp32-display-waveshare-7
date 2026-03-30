@@ -37,7 +37,27 @@ lvgl:
       pad_right: 5
       
       widgets:
-      
+        # Test Button - Large Centered Button
+        - button: 
+            width: 300px
+            height: 309px
+            align_self: center
+            id: test_button
+            styles: control
+            checkable: true
+            widgets:
+              - label:
+                  text_font: $text_font
+                  align: center
+                  id: test_button_label
+                  text: "Test"
+            on_press:
+              - homeassistant.service:
+                  service: notify.notify
+                  data:
+                    message: "Button gedrückt!"
+                    title: "ESP32 Display"
+        
         # Office Features Scene
         - button: 
             height: $button_height_single
