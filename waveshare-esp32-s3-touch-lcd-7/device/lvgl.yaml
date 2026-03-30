@@ -1,88 +1,204 @@
 lvgl:
+  displays:
+    - my_display_id # Ersetze dies mit deiner Display-ID
+  
+  # Farben für ein "Polished" Aussehen
+  bg_color: 0x1E1E1E # Dunkler Hintergrund
+  text_color: 0xFFFFFF
+
+  # --- POPUP (Top Layer liegt über allem) ---
   top_layer:
     widgets:
-      # Clock
-      - label:
-          text: "--:--"
-          id: display_time
-          styles: roboto15_style
-          align: top_mid
-          x: 0
-          y: 4
-          text_align: center
-          text_color: 0xFFFFFF
-      # WiFi Indicator
-      - label:
-          text: $wifi  # WiFi icon from mdi
-          id: wifi_indicator
-          styles: roboto15_style
-          align: top_left
-          x: 8
-          y: 4
-          text_color: 0xFFFFFF
-          on_press:
-            - lambda: |-
-                id(wifi_popup).hidden = !id(wifi_popup).hidden;
-      # WiFi Popup
       - obj:
           id: wifi_popup
+          width: 300
+          height: 200
+          align: CENTER
+          bg_color: 0x333333
+          radius: 10
           hidden: true
-          align: center
-          width: 400px
-          height: 200px
-          bg_color: 0x313131
-          bg_opa: cover
-          radius: 12px
+          layout:
+            type: FLEX
+            flex_flow: COLUMN
+            flex_align_main: SPACE_EVENLY
+            flex_align_cross: CENTER
           widgets:
             - label:
-                text: "WiFi Information"
-                align: top_mid
-                y: 10
-                text_color: 0xFFFFFF
-                text_font: roboto17_font
+                text: "WLAN Status"
+                text_font: font_large
             - label:
-                text: "SSID: --"
-                id: popup_ssid
-                align: top_mid
-                y: 40
-                text_color: 0xFFFFFF
-                text_font: roboto17_font
+                id: popup_ssid_label
+                text: "SSID: Lade..."
             - label:
-                text: "IP: --"
-                id: popup_ip
-                align: top_mid
-                y: 70
-                text_color: 0xFFFFFF
-                text_font: roboto17_font
-            - label:
-                text: "Press to toggle WiFi"
-                align: bottom_mid
-                y: -10
-                text_color: 0xFF8C00
-                text_font: roboto15_font
+                id: popup_ip_label
+                text: "IP: Lade..."
+            - switch:
+                id: wifi_toggle_dummy
+                # Dummy Schalter, siehe Hinweise
             - button:
-                align: bottom_mid
-                width: 100px
-                height: 40px
-                y: 30
-                text: "Toggle"
-                id: wifi_toggle_button
-                styles: control
-                on_press:
-                  - homeassistant.service:
-                      service: persistent_notification.create
-                      data:
-                        title: "WiFi Toggle"
-                        message: "Button pressed"
-  pages:
-    - id: main_page
-      layout: 
-        type: flex
-        flex_flow: column_wrap
-      width: 100%
-      bg_color: Black
-      bg_opa: cover
-      pad_top: 30
-      pad_bottom: 5
-      pad_left: 5
-      pad_right: 5
+                widgets:
+                  - label:
+                      text: "Schließen"
+                on_click:
+                  - lvgl.widget.hide: wifi_popup
+
+  widgets:
+    # --- 1. KOPFZEILE (Immer oben) ---
+    - obj:
+        id: top_bar
+        width: 100%
+        height: 50
+        align: TOP_MID
+        bg_color: 0x2C2C2C
+        radius: 0
+        border_width: 0
+        widgets:
+          - label:
+              id: time_label
+              text: "00:00"
+              text_font: font_large
+              align: LEFT_MID
+              x: 15
+          - button:
+              align: RIGHT_MID
+              x: -15
+              bg_color: 0x2C2C2C # Unsichtbarer Hintergrund
+              widgets:
+                - label:
+                    text: "\uf1eb" # FontAwesome WiFi Icon
+                    text_font: font_icons
+                    text_color: 0x4CAF50 # Grün wenn verbunden
+              on_click:
+                # Öffnet das Popup und aktualisiert die Texte
+                - lambda: |-
+                    id(popup_ssid_label).set_text(id(display_ssid).state.c_str());
+                    id(popup_ip_label).set_text(id(display_ip).state.c_str());
+                - lvgl.widget.show: wifi_popup
+
+    # --- 2. HAUPTBEREICH MIT NAVIGATION UNTEN ---
+    - tabview:
+        id: main_tabs
+        width: 100%
+        height: 430 # Gesamt (480) - TopBar (50)
+        y: 50 # Startet direkt unter der TopBar
+        tab_bar_placement: BOTTOM
+        
+        tabs:
+          # --- SEITE 1: ENERGY FLOW (Statisch/Fake) ---
+          - tab:
+              name: "\uf0e7 Energie"
+              widgets:
+                - obj:
+                    width: 100%
+                    height: 100%
+                    bg_color: 0x1E1E1E
+                    border_width: 0
+                    # Fake Flow Diagramm (Zentriertes Haus, außen Quellen)
+                    widgets:
+                      - label: { text: "Solar: 2.5 kW", align: TOP_MID, y: 20, text_color: 0xFFC107 }
+                      - label: { text: "Netz: 0.0 kW", align: LEFT_MID, x: 20, text_color: 0xF44336 }
+                      - label: { text: "Akku: 85%", align: RIGHT_MID, x: -20, text_color: 0x4CAF50 }
+                      # Das "Haus" im Zentrum
+                      - obj:
+                          width: 120
+                          height: 120
+                          align: CENTER
+                          bg_color: 0x333333
+                          radius: 60 # Kreis
+                          layout: { type: FLEX, flex_flow: COLUMN, flex_align_main: CENTER, flex_align_cross: CENTER }
+                          widgets:
+                            - label: { text: "\uf015", text_font: font_large } # Haus Icon
+                            - label: { text: "1.8 kW" }
+
+          # --- SEITE 2: ROLLOS & FENSTER ---
+          - tab:
+              name: "\uf853 Rollos"
+              widgets:
+                - obj:
+                    width: 100%
+                    height: 100%
+                    bg_color: 0x1E1E1E
+                    border_width: 0
+                    layout:
+                      type: FLEX
+                      flex_flow: ROW
+                      flex_align_main: SPACE_EVENLY
+                    widgets:
+                      # Linke Spalte: Rollos (Hier exemplarisch Rollo 1 & 2)
+                      - obj:
+                          width: 45%
+                          height: 100%
+                          layout: { type: FLEX, flex_flow: COLUMN, pad_all: 10 }
+                          widgets:
+                            - label: { text: "Rollos", text_font: font_large, pad_bottom: 20 }
+                            # Rollo 1
+                            - obj:
+                                width: 100%
+                                height: 60
+                                layout: { type: FLEX, flex_flow: ROW, flex_align_main: SPACE_BETWEEN, flex_align_cross: CENTER }
+                                widgets:
+                                  - label: { text: "Wohnzimmer" }
+                                  - button: { widgets: [ label: { text: "\uf077" } ] } # Hoch
+                                  - button: { widgets: [ label: { text: "\uf04d" } ] } # Stop
+                                  - button: { widgets: [ label: { text: "\uf078" } ] } # Runter
+                            # Rollo 2 (Dupliziere diesen Block für weitere Rollos)
+                            - obj:
+                                width: 100%
+                                height: 60
+                                layout: { type: FLEX, flex_flow: ROW, flex_align_main: SPACE_BETWEEN, flex_align_cross: CENTER }
+                                widgets:
+                                  - label: { text: "Schlafzimmer" }
+                                  - button: { widgets: [ label: { text: "\uf077" } ] }
+                                  - button: { widgets: [ label: { text: "\uf04d" } ] }
+                                  - button: { widgets: [ label: { text: "\uf078" } ] }
+
+                      # Rechte Spalte: Fenster
+                      - obj:
+                          width: 45%
+                          height: 100%
+                          layout: { type: FLEX, flex_flow: COLUMN, pad_all: 10 }
+                          widgets:
+                            - label: { text: "Fenster", text_font: font_large, pad_bottom: 20 }
+                            - obj:
+                                width: 100%
+                                layout: { type: FLEX, flex_flow: ROW, flex_align_main: SPACE_BETWEEN }
+                                widgets:
+                                  - label: { text: "Schlafzimmer:" }
+                                  - label: { text: "Zu", text_color: 0x4CAF50 } # Grün
+                            - obj:
+                                width: 100%
+                                layout: { type: FLEX, flex_flow: ROW, flex_align_main: SPACE_BETWEEN }
+                                widgets:
+                                  - label: { text: "Bad:" }
+                                  - label: { text: "Offen", text_color: 0xF44336 } # Rot
+
+          # --- SEITE 3: EINSTELLUNGEN ---
+          - tab:
+              name: "\uf013 Setup"
+              widgets:
+                - obj:
+                    width: 100%
+                    height: 100%
+                    bg_color: 0x1E1E1E
+                    border_width: 0
+                    layout: { type: FLEX, flex_flow: COLUMN, pad_all: 20 }
+                    widgets:
+                      - label: { text: "Helligkeit", pad_bottom: 10 }
+                      - slider:
+                          width: 80%
+                          min_value: 10
+                          max_value: 100
+                          value: 80
+                      - label: { text: "Display Timeout", pad_top: 30, pad_bottom: 10 }
+                      - dropdown:
+                          options: "1 Min\n5 Min\nImmer an"
+
+# --- LOGIK: UHRZEIT AKTUALISIEREN ---
+# Dies sorgt dafür, dass die Uhrzeit oben links aktualisiert wird
+on_time:
+  - seconds: 0
+    minutes: /1
+    then:
+      - lvgl.label.update:
+          id: time_label
+          text: !lambda return id(my_time).now().strftime("%H:%M");
