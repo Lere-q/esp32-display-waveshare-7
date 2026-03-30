@@ -193,12 +193,3 @@ lvgl:
                       - dropdown:
                           options: "1 Min\n5 Min\nImmer an"
 
-# --- LOGIK: UHRZEIT AKTUALISIEREN ---
-# Dies sorgt dafür, dass die Uhrzeit oben links aktualisiert wird
-on_time:
-  - seconds: 0
-    minutes: /1
-    then:
-      - lvgl.label.update:
-          id: time_label
-          text: !lambda return id(my_time).now().strftime("%H:%M");
